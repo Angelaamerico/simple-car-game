@@ -1,0 +1,150 @@
+import pygame
+from random import randint
+
+pygame.init()
+x = 380  # max 510 min 130
+y = 300
+pos_x_police = 170
+pos_x_taxi = 290
+pos_x_blue = 400
+pos_x_red = 530
+pos_x_brown = 400
+initial_positions = {
+    "police": -1600,
+    "taxi": -1500,
+    "red": -1200,
+    "blue": -2900,
+    "brown": -1000
+}
+
+pos_y_police = initial_positions["police"]
+pos_y_taxi = initial_positions["taxi"]
+pos_y_red = initial_positions["red"]
+pos_y_blue = initial_positions["blue"]
+pos_y_brown = initial_positions["brown"]
+
+timer = 0
+tempo_segundo = 0
+
+velocidade = 20
+velocidade2 = 8
+background = pygame.image.load('background.png')
+car = pygame.image.load('car.png')
+police = pygame.image.load('police.png')
+taxi = pygame.image.load('taxi.png')
+red = pygame.image.load('red.png')
+blue = pygame.image.load('blue.png')
+brown = pygame.image.load('brown.png')
+
+font = pygame.font.SysFont('arial black', 30)
+text = font.render('time: ', True, (255, 255, 255), (0, 0, 0))
+pos_text = text.get_rect()
+pos_text.center = (65, 50)
+
+game_over_font = pygame.font.SysFont('arial black', 50)
+restart_font = pygame.font.SysFont('arial black', 30)
+
+janela = pygame.display.set_mode((800, 600))
+pygame.display.set_caption('jogo da velha')
+
+
+def reset_game():
+    global x, y, pos_y_police, pos_y_taxi, pos_y_red, pos_y_blue, pos_y_brown, timer, tempo_segundo, game_over
+    x = 380
+    y = 300
+    pos_y_police = initial_positions["police"]
+    pos_y_taxi = initial_positions["taxi"]
+    pos_y_red = initial_positions["red"]
+    pos_y_blue = initial_positions["blue"]
+    pos_y_brown = initial_positions["brown"]
+    timer = 0
+    tempo_segundo = 0
+    game_over = False
+
+
+def display_game_over():
+    game_over_text = game_over_font.render('Game Over', True, (255, 0, 0))
+    pos_game_over = game_over_text.get_rect(center=(400, 250))
+    janela.blit(game_over_text, pos_game_over)
+
+    restart_text = restart_font.render(
+        'Press R to Restart', True, (255, 255, 255))
+    pos_restart = restart_text.get_rect(center=(400, 320))
+    janela.blit(restart_text, pos_restart)
+
+
+game_over = False
+
+janela_aberta = True
+while janela_aberta:
+    pygame.time.delay(50)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            janela_aberta = False
+
+    if not game_over:
+        commands = pygame.key.get_pressed()
+        if commands[pygame.K_UP] and y > 0:
+            y -= velocidade
+        if commands[pygame.K_DOWN] and y < 430:
+            y += velocidade
+        if commands[pygame.K_LEFT] and x > 130:
+            x -= velocidade
+        if commands[pygame.K_RIGHT] and x < 510:
+            x += velocidade
+
+        # Check for collisions 
+        car_rect = pygame.Rect(x+45, y+10, car.get_width() - 90, car.get_height()-20)
+        for obj, pos in [("taxi", (pos_x_taxi, pos_y_taxi)), ("red", (pos_x_red, pos_y_red)), ("blue", (pos_x_blue, pos_y_blue)), ("brown", (pos_x_brown, pos_y_brown)), ("police", (pos_x_police, pos_y_police))]:
+            obj_image = eval(obj)
+            obj_rect = pygame.Rect(
+                pos[0]+10, pos[1], obj_image.get_width() - 20, obj_image.get_height() - 20)
+            if car_rect.colliderect(obj_rect):
+                print(f"Collision with {obj}")
+                game_over = True
+                break
+
+        if not game_over:
+            if pos_y_police >= 800:
+                pos_y_police = randint(-1000, 0)
+            if pos_y_taxi >= 900:
+                pos_y_taxi = randint(-2000, 0)
+            if pos_y_red >= 900:
+                pos_y_red = randint(-2800, 0)
+            if pos_y_blue >= 900:
+                pos_y_blue = randint(-3000, 0)
+            if pos_y_brown >= 900:
+                pos_y_brown = randint(-800, 0)
+
+            if timer < 20:
+                timer += 1
+            else:
+                tempo_segundo += 1
+                text = font.render('time: ' + str(tempo_segundo),
+                                   True, (255, 255, 255), (0, 0, 0))
+                timer = 0
+
+            pos_y_police += velocidade2 + 6
+            pos_y_blue += velocidade2 - 2
+            pos_y_red += velocidade2 - 1
+            pos_y_taxi += velocidade2 + 3
+            pos_y_brown += velocidade2 + 3
+
+        janela.blit(background, (0, 0))
+        janela.blit(car, (x, y))
+        janela.blit(police, (pos_x_police, pos_y_police))
+        janela.blit(taxi, (pos_x_taxi, pos_y_taxi))
+        janela.blit(red, (pos_x_red, pos_y_red))
+        janela.blit(blue, (pos_x_blue, pos_y_blue))
+        janela.blit(brown, (pos_x_brown, pos_y_brown))
+        janela.blit(text, pos_text)
+
+    else:
+        display_game_over()
+        commands = pygame.key.get_pressed()
+        if commands[pygame.K_r]:
+            reset_game()
+
+    pygame.display.update()
+
+pygame.quit()
